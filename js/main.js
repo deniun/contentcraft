@@ -1,210 +1,155 @@
-// ===== Hero Background Slideshow =====
-const heroSlides = document.querySelectorAll('.hero-slide');
-let currentSlide = 0;
-
-function nextSlide() {
-    heroSlides[currentSlide].classList.remove('active');
-    currentSlide = (currentSlide + 1) % heroSlides.length;
-    heroSlides[currentSlide].classList.add('active');
-}
-
-// Change slide every 5 seconds
-setInterval(nextSlide, 5000);
-
-// ===== Hero Stats Counter Animation =====
-const heroStatsNums = document.querySelectorAll('.hero-stats .stat-num');
-
-const animateHeroStats = (counter) => {
-    const target = +counter.getAttribute('data-target');
-    const increment = target / 100;
-    let count = 0;
-
-    const updateCount = () => {
-        count += increment;
-        if (count < target) {
-            counter.textContent = Math.ceil(count);
-            requestAnimationFrame(updateCount);
-        } else {
-            counter.textContent = target;
-        }
-    };
-
-    updateCount();
-};
-
-// Animate on page load
-window.addEventListener('load', () => {
-    heroStatsNums.forEach(stat => animateHeroStats(stat));
-});
-
 // ===== Navbar Scroll Effect =====
 const navbar = document.getElementById('navbar');
-let lastScrollTop = 0;
 
 window.addEventListener('scroll', () => {
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    
-    // Add scrolled class when scrolled down
-    if (scrollTop > 50) {
+    if (window.pageYOffset > 50) {
         navbar.classList.add('scrolled');
     } else {
         navbar.classList.remove('scrolled');
     }
-    
-    lastScrollTop = scrollTop;
 });
 
-// ===== Fade-in Animation on Scroll =====
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const delay = entry.target.getAttribute('data-delay') || 0;
-            setTimeout(() => {
-                entry.target.classList.add('visible');
-            }, delay);
-            observer.unobserve(entry.target);
-        }
-    });
-}, observerOptions);
-
-// Observe all fade-in elements
-const fadeElements = document.querySelectorAll('.fade-in');
-fadeElements.forEach(el => observer.observe(el));
-
-// ===== Smooth Scroll for Anchor Links =====
+// ===== Smooth Scroll =====
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
         const target = document.querySelector(this.getAttribute('href'));
-        
         if (target) {
-            const navbarHeight = navbar.offsetHeight;
-            const targetPosition = target.offsetTop - navbarHeight;
-            
-            window.scrollTo({
-                top: targetPosition,
-                behavior: 'smooth'
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
             });
         }
     });
 });
 
-// ===== Counter Animation for Stats =====
-const counters = document.querySelectorAll('.stat-number');
-const counterSpeed = 200; // Lower is faster
+// ===== AOS (Animate On Scroll) Simple Implementation =====
+const observerOptions = {
+    threshold: 0.2,
+    rootMargin: '0px 0px -100px 0px'
+};
 
-const animateCounter = (counter) => {
-    const target = +counter.getAttribute('data-target');
-    const increment = target / counterSpeed;
-    let count = 0;
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const delay = entry.target.getAttribute('data-aos-delay') || 0;
+            setTimeout(() => {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0) scale(1)';
+            }, delay);
+        }
+    });
+}, observerOptions);
 
-    const updateCount = () => {
-        count += increment;
-        if (count < target) {
-            counter.textContent = Math.ceil(count);
-            requestAnimationFrame(updateCount);
+// Observe all elements with data-aos attribute
+document.querySelectorAll('[data-aos]').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(50px) scale(0.95)';
+    el.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+    observer.observe(el);
+});
+
+// ===== Counter Animation =====
+const counterElements = document.querySelectorAll('.stat-number-big');
+
+const animateCounter = (el) => {
+    const target = parseInt(el.getAttribute('data-target'));
+    const duration = 2000; // 2 seconds
+    const increment = target / (duration / 16); // 60 fps
+    let current = 0;
+
+    const updateCounter = () => {
+        current += increment;
+        if (current < target) {
+            el.textContent = Math.floor(current);
+            requestAnimationFrame(updateCounter);
         } else {
-            counter.textContent = target;
+            el.textContent = target;
         }
     };
 
-    updateCount();
+    updateCounter();
 };
 
-// Observe counters
 const counterObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
-            const counter = entry.target;
-            animateCounter(counter);
-            counterObserver.unobserve(counter);
+            animateCounter(entry.target);
+            counterObserver.unobserve(entry.target);
         }
     });
 }, { threshold: 0.5 });
 
-counters.forEach(counter => counterObserver.observe(counter));
+counterElements.forEach(el => counterObserver.observe(el));
 
-// ===== CTA Button Interactions =====
-const ctaButtons = document.querySelectorAll('.btn-primary, .btn-cta');
-
-ctaButtons.forEach(button => {
-    button.addEventListener('mouseenter', function() {
-        this.style.transform = 'translateY(-2px)';
-    });
-    
-    button.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(0)';
-    });
-});
-
-// ===== Contact Links - Track Clicks (Optional Analytics) =====
-const contactLinks = document.querySelectorAll('.contact-link, .nav-phone');
-
-contactLinks.forEach(link => {
-    link.addEventListener('click', function(e) {
-        const type = this.href.includes('tel:') ? 'phone' : 'email';
-        console.log(`Contact interaction: ${type}`);
-        
-        // You can add analytics tracking here
-        // Example: gtag('event', 'contact_click', { method: type });
-    });
-});
-
-// ===== Parallax Effect for Hero Section =====
-const hero = document.querySelector('.hero');
-
+// ===== Parallax Effect for Showcase Images =====
 window.addEventListener('scroll', () => {
     const scrolled = window.pageYOffset;
-    if (hero && scrolled < window.innerHeight) {
-        hero.style.transform = `translateY(${scrolled * 0.5}px)`;
-        hero.style.opacity = 1 - (scrolled / window.innerHeight);
-    }
-});
-
-// ===== Service Card Hover Effects =====
-const serviceCards = document.querySelectorAll('.service-card');
-
-serviceCards.forEach(card => {
-    card.addEventListener('mouseenter', function() {
-        this.style.borderColor = 'var(--color-accent)';
-    });
+    const showcaseImages = document.querySelectorAll('.showcase-visual img');
     
-    card.addEventListener('mouseleave', function() {
-        this.style.borderColor = 'var(--color-line)';
+    showcaseImages.forEach((img, index) => {
+        const speed = 0.3;
+        const yPos = -(scrolled * speed);
+        img.style.transform = `translateY(${yPos}px) scale(1.1)`;
     });
 });
 
-// ===== Responsive Menu Toggle (for future mobile menu) =====
-// This is a placeholder for future mobile menu implementation
-const createMobileMenu = () => {
-    if (window.innerWidth <= 768) {
-        // Mobile menu logic can be added here
-        console.log('Mobile view detected');
-    }
-};
+// ===== Portfolio Item Click Effect =====
+const portfolioItems = document.querySelectorAll('.portfolio-big-item');
 
-window.addEventListener('resize', createMobileMenu);
-createMobileMenu();
+portfolioItems.forEach(item => {
+    item.addEventListener('click', function() {
+        // Add a subtle click animation
+        this.style.transform = 'scale(0.98)';
+        setTimeout(() => {
+            this.style.transform = '';
+        }, 200);
+    });
+});
 
 // ===== Loading Animation =====
 window.addEventListener('load', () => {
-    document.body.classList.add('loaded');
-    
-    // Trigger initial animations
-    const heroContent = document.querySelector('.hero-content');
-    if (heroContent) {
-        heroContent.classList.add('visible');
-    }
+    document.body.style.opacity = '0';
+    setTimeout(() => {
+        document.body.style.transition = 'opacity 0.5s';
+        document.body.style.opacity = '1';
+    }, 100);
 });
 
-// ===== Prevent FOUC (Flash of Unstyled Content) =====
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        document.body.style.visibility = 'visible';
-    }, 100);
+// ===== Mouse Cursor Effect (Optional) =====
+const cursor = document.createElement('div');
+cursor.className = 'custom-cursor';
+cursor.style.cssText = `
+    width: 20px;
+    height: 20px;
+    border: 2px solid #FF3366;
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transition: all 0.1s ease;
+    display: none;
+`;
+document.body.appendChild(cursor);
+
+document.addEventListener('mousemove', (e) => {
+    cursor.style.display = 'block';
+    cursor.style.left = e.clientX - 10 + 'px';
+    cursor.style.top = e.clientY - 10 + 'px';
+});
+
+// Enlarge cursor on hover over interactive elements
+const interactiveElements = document.querySelectorAll('a, button, .portfolio-big-item');
+interactiveElements.forEach(el => {
+    el.addEventListener('mouseenter', () => {
+        cursor.style.width = '40px';
+        cursor.style.height = '40px';
+        cursor.style.backgroundColor = 'rgba(255, 51, 102, 0.2)';
+    });
+    
+    el.addEventListener('mouseleave', () => {
+        cursor.style.width = '20px';
+        cursor.style.height = '20px';
+        cursor.style.backgroundColor = 'transparent';
+    });
 });
